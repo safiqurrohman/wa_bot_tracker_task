@@ -12,6 +12,22 @@ db.connect((err) => {
         console.error('❌ Gagal koneksi database:', err);
     } else {
         console.log('✅ Database terhubung');
+        
+        // Buat tabel jika belum ada (memudahkan setup di Railway)
+        const createTableQuery = `
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_phone VARCHAR(100),
+                tanggal DATE,
+                deskripsi TEXT,
+                status TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        db.query(createTableQuery, (err) => {
+            if (err) console.error('❌ Gagal inisialisasi tabel:', err);
+            else console.log('✅ Tabel "tasks" siap digunakan');
+        });
     }
 });
 
