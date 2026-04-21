@@ -1,0 +1,42 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 *MANUAL BOT TASK TRACKER*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+--- 📝 PENAMBAHAN TASK ---
+• task [deskripsi]             -> Tambah task untuk hari ini
+  Contoh: task belajar math
+• task besok [deskripsi]       -> Tambah task untuk besok
+  Contoh: task besok rapat kerja
+• task [YYYY-MM-DD] [item]     -> Tambah task tanggal spesifik
+  Contoh: task 2026-05-01 beli tiket
+• besok [deskripsi]            -> Shorthand tambah task besok
+  Contoh: besok olahraga pagi
+
+--- 🔍 MELIHAT DAFTAR TASK ---
+• today / hari ini             -> Lihat task hari ini
+• besok / tomorrow             -> Lihat task besok
+• kemarin / yesterday          -> Lihat task kemarin
+• [n] hari sebelumnya          -> Lihat task [n] hari lalu
+  Contoh: 2 hari sebelumnya
+• all / semua                  -> Lihat semua task (mendatang)
+• belum selesai / pending      -> Lihat semua task yg belum dikerjakan
+• [YYYY-MM-DD]                 -> Lihat task di tanggal spesifik
+  Contoh: 2026-04-25
+
+--- 📈 LAPORAN (REPORT) ---
+• report / laporan             -> Ringkasan semua waktu + detail task
+• report 1w / 1 minggu         -> Ringkasan 7 hari terakhir
+• report 2w / 2 minggu         -> Ringkasan 14 hari terakhir
+• report 1m / 1 bulan          -> Ringkasan 30 hari terakhir
+• report [YYYY-MM-DD]          -> Ringkasan 1 minggu mulai tgl tsb
+  Contoh: report 2026-04-01
+
+--- ✅ MANAJEMEN TASK ---
+• done [id] / selesai [id]     -> Tandai task selesai (Gunakan Code ID)
+  Contoh: done 12
+• hapus [id] / delete [id]     -> Hapus task permanen
+  Contoh: hapus 15
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 *Note*: Bot ini menggunakan sistem Hashing JID untuk keamanan privasi Anda.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
