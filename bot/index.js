@@ -3,8 +3,13 @@ const qrcode = require('qrcode-terminal');
 const db = require('../config/db');
 const dayjs = require('dayjs');
 const crypto = require('crypto');
+const express = require('express');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
+
+const app = express();
+const port = process.env.PORT || 3000;
+let latestQR = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -16,8 +21,36 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    console.log('Scan QR ini:');
+    latestQR = qr;
+    console.log('--- QR CODE DETECTED ---');
+    // Generate URL for scanning if terminal is messy
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
+    console.log('Jika QR di atas rusak, buka link ini:');
+    console.log(qrUrl);
+    console.log('------------------------');
+    
+    // Tetap print ke terminal (opsional)
     qrcode.generate(qr, { small: true });
+});
+
+app.get('/', (req, res) => {
+    if (!latestQR) {
+        return res.send('<h1>Bot sedang loading atau sudah login.</h1>');
+    }
+    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(latestQR)}`;
+    res.send(`
+        <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+            <h1>Scan QR Code untuk Login Bot</h1>
+            <p>Silakan scan menggunakan WhatsApp di HP Anda (Linked Devices)</p>
+            <img src="${qrImg}" style="border: 10px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.2);" />
+            <br><br>
+            <p>Status: Menunggu Scan...</p>
+        </div>
+    `);
+});
+
+app.listen(port, () => {
+    console.log(`Server QR aktif di port ${port}`);
 });
 
 client.on('ready', () => {
