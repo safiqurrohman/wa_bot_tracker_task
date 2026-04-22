@@ -61,6 +61,13 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server QR aktif di port ${port}`);
+}).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.log(`⚠️ Port ${port} sudah terpakai. Mencoba port lain...`);
+        app.listen(0); // Biarkan OS memilih port bebas
+    } else {
+        console.error('❌ Server error:', err);
+    }
 });
 
 client.on('ready', () => {
@@ -81,19 +88,24 @@ client.on('message_create', async (message) => {
     if (!rawText) return;
 
     const text = rawText.toLowerCase().trim();
-    // Hashing user phone for privacy
+    
+    // DEBUG: Cek pesan masuk di console
+    console.log(`[DEBUG] Pesan masuk dari ${message.from}: "${rawText}" (fromMe: ${message.fromMe})`);
+
+    // Hashing user phone untuk privacy
     const user = crypto.createHash('sha256').update(message.from).digest('hex');
 
     // Abaikan pesan yang dikirim oleh bot sendiri agar tidak looping
-    if (message.fromMe && (
-        rawText.startsWith('✅') || 
-        rawText.startsWith('❌') || 
-        rawText.startsWith('📅') || 
-        rawText.startsWith('📊') || 
-        rawText.startsWith('⏳') || 
-        rawText.startsWith('🗑️') ||
-        rawText.startsWith('📈')
-    )) {
+    // Tapi izinkan jika itu perintah (tidak diawali emoji balasan)
+    const isBotResponse = rawText.startsWith('✅') || 
+                         rawText.startsWith('❌') || 
+                         rawText.startsWith('📅') || 
+                         rawText.startsWith('📊') || 
+                         rawText.startsWith('⏳') || 
+                         rawText.startsWith('🗑️') ||
+                         rawText.startsWith('📈');
+
+    if (message.fromMe && isBotResponse) {
         return;
     }
 
