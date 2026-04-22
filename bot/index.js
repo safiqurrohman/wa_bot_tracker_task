@@ -4,6 +4,8 @@ const db = require('../config/db');
 const dayjs = require('dayjs');
 const crypto = require('crypto');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 
@@ -144,6 +146,19 @@ client.on('message_create', async (message) => {
         return;
     }
 
+    // ===== FITUR / MENU (HELP) =====
+    const helpKeywords = ['bisa apa', 'fitur', 'menu', 'help', 'panduan', 'tutor'];
+    if (helpKeywords.some(keyword => text.includes(keyword))) {
+        try {
+            const manualPath = path.join(__dirname, '../describe.txt');
+            const manual = fs.readFileSync(manualPath, 'utf8');
+            return message.reply(manual);
+        } catch (err) {
+            console.error('Gagal baca manual:', err);
+            return message.reply('❌ Maaf, panduan sedang tidak tersedia.');
+        }
+    }
+
     // ===== TAMBAH TASK (GENERAL) =====
     if (text.startsWith('task ')) {
         let parts = text.split(' ');
@@ -179,7 +194,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: TODAY / HARI INI =====
-    if (text === 'today' || text === 'hari ini') {
+    if (text === 'task today' || text === 'task hari ini') {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
@@ -188,7 +203,8 @@ client.on('message_create', async (message) => {
                 if (err) return message.reply('❌ Error ambil data');
                 if (results.length === 0) return message.reply('📭 Tidak ada task hari ini');
 
-                let response = `📅 *Task Hari Ini (${today})*\n`;
+                let response = `📋 *DAFTAR TASK HARI INI*\n`;
+                response += `📅 Tanggal: ${today}\n`;
                 response += `━━━━━━━━━━━━━━\n`;
                 results.forEach((task) => {
                     const status = task.status === 1 ? '✅' : '❌';
@@ -201,7 +217,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: BESOK / TOMORROW =====
-    if (text === 'besok' || text === 'tomorrow') {
+    if (text === 'task besok' || text === 'task tomorrow') {
         const besok = dayjs().add(1, 'day').format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
@@ -210,7 +226,8 @@ client.on('message_create', async (message) => {
                 if (err) return message.reply('❌ Error ambil data');
                 if (results.length === 0) return message.reply('📭 Tidak ada task untuk besok');
 
-                let response = `📅 *Task Besok (${besok})*\n`;
+                let response = `📋 *DAFTAR TASK BESOK*\n`;
+                response += `📅 Tanggal: ${besok}\n`;
                 response += `━━━━━━━━━━━━━━\n`;
                 results.forEach((task) => {
                     const status = task.status === 1 ? '✅' : '❌';
@@ -224,7 +241,7 @@ client.on('message_create', async (message) => {
 
     // ===== LIST: PREVIOUS (KEMARIN / AGO) =====
     const agoMatch = text.match(/(\d+)\s*(hari sebelumnya|days ago)/);
-    if (agoMatch || text === 'kemarin' || text === 'yesterday') {
+    if (agoMatch || text === ' task kemarin' || text === ' task yesterday') {
         let daysAgo = 1;
         if (agoMatch) {
             daysAgo = parseInt(agoMatch[1]);
@@ -238,7 +255,9 @@ client.on('message_create', async (message) => {
                 if (err) return message.reply('❌ Error ambil data');
                 if (results.length === 0) return message.reply(`📭 Tidak ada task pada ${targetDate}`);
 
-                let response = `📅 *Task ${daysAgo === 1 ? 'Kemarin' : daysAgo + ' Hari Lalu'} (${targetDate})*\n`;
+                const label = daysAgo === 1 ? 'KEMARIN' : `${daysAgo} HARI LALU`;
+                let response = `📋 *DAFTAR TASK ${label}*\n`;
+                response += `📅 Tanggal: ${targetDate}\n`;
                 response += `━━━━━━━━━━━━━━\n`;
                 results.forEach((task) => {
                     const status = task.status === 1 ? '✅' : '❌';
@@ -251,7 +270,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: ALL / SEMUA =====
-    if (text === 'all' || text === 'semua') {
+    if (text === 'task all' || text === 'task semua') {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE user_phone = ? AND tanggal >= ? ORDER BY tanggal ASC, id ASC',
@@ -280,7 +299,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: BELUM SELESAI =====
-    if (text === 'belum selesai' || text === 'pending') {
+    if (text === 'task belum selesai' || text === 'task pending') {
         db.query(
             'SELECT * FROM tasks WHERE user_phone = ? AND status = 0 ORDER BY tanggal ASC',
             [user],
@@ -301,7 +320,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== REPORT COMMANDS =====
-    if (text.startsWith('report') || text.startsWith('laporan')) {
+    if (text.startsWith('task report') || text.startsWith('task laporan')) {
         let startDate, endDate, title;
         const parts = text.split(' ');
 
@@ -390,7 +409,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== DONE TASK (BY ID) =====
-    if (text.startsWith('done ') || text.startsWith('selesai ')) {
+    if (text.startsWith('task done ') || text.startsWith('task selesai ')) {
         const idStr = text.split(' ')[1];
         const id = parseInt(idStr);
         if (!id) return message.reply('❌ Format salah. Contoh: done 12');
@@ -426,7 +445,7 @@ client.on('message_create', async (message) => {
                 if (err) return message.reply('❌ Error ambil data');
                 if (results.length === 0) return message.reply(`📭 Tidak ada task di ${text}`);
 
-                let response = `📅 *Daftar Task: ${text}*\n`;
+                let response = `📋 *DAFTAR TASK TANGGAL: ${text}*\n`;
                 response += `━━━━━━━━━━━━━━\n`;
                 results.forEach((task) => {
                     const status = task.status === 1 ? '✅' : '❌';
@@ -516,12 +535,16 @@ client.on('message_create', async (message) => {
         const query = `
             SELECT b.kategori, b.nominal as budget, IFNULL(SUM(e.nominal), 0) as terpakai
             FROM budgets b
-            LEFT JOIN expenses e ON b.kategori = e.kategori AND b.user_phone = e.user_phone AND e.tanggal LIKE ?
+            LEFT JOIN expenses e ON b.kategori = e.kategori AND b.user_phone = e.user_phone AND e.tanggal >= ? AND e.tanggal <= LAST_DAY(?)
             WHERE b.user_phone = ? AND b.bulan = ?
             GROUP BY b.kategori
         `;
-        db.query(query, [`${bulan}%`, user, bulan], (err, rows) => {
-            if (err) return message.reply('❌ Gagal ambil data budget');
+        const startOfMonth = `${bulan}-01`;
+        db.query(query, [startOfMonth, startOfMonth, user, bulan], (err, rows) => {
+            if (err) {
+                console.error('Budget Query Error:', err);
+                return message.reply('❌ Gagal ambil data budget');
+            }
             if (rows.length === 0) return message.reply('📭 Anda belum mengatur budget bulan ini.');
 
             let response = `📊 *Anggaran Bulan Ini (${bulan})*\n`;
@@ -556,7 +579,7 @@ client.on('message_create', async (message) => {
             response += `━━━━━━━━━━━━━━\n`;
             rows.forEach(row => {
                 total += parseFloat(row.nominal);
-                response += `ID:${row.id} [${row.kategori}] ${row.diskripsi}: ${formatRupiah(row.nominal)}\n`;
+                response += `ID:${row.id} [${row.kategori}] ${row.deskripsi || '-'}: ${formatRupiah(row.nominal)}\n`;
             });
             response += `━━━━━━━━━━━━━━\n`;
             response += `💰 *Total: ${formatRupiah(total)}*`;
