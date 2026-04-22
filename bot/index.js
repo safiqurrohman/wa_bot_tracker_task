@@ -20,7 +20,6 @@ const formatRupiah = (number) => {
 const app = express();
 const port = process.env.PORT || 3000;
 let latestQR = '';
-let pairingCode = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -42,51 +41,12 @@ const client = new Client({
     }
 });
 
-let pairingCodeRequested = false;
-
-// Fungsi untuk meminta kode pairing dengan sistem Re-try (Anti Detached Frame)
-const requestPairingWithRetry = async (pairingNumber, retries = 3) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            console.log(`--- MENCOBA GENERATE KODE PAIRING (${i + 1}/${retries}) ---`);
-            const code = await client.requestPairingCode(pairingNumber);
-            return code;
-        } catch (err) {
-            console.error(`❌ Percobaan ${i + 1} gagal:`, err.message);
-            if (i === retries - 1) throw err;
-            console.log('--- Menunggu 5 detik sebelum coba lagi... ---');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-};
-
 client.on('qr', async (qr) => {
     latestQR = qr;
-    const pairingNumber = process.env.PAIRING_NUMBER;
-
-    if (pairingNumber && !pairingCodeRequested) {
-        pairingCodeRequested = true;
-        console.log(`--- MENYIAPKAN PAIRING CODE (STABILIZATION MODE): ${pairingNumber} ---`);
-        
-        // Jeda awal 10 detik agar browser benar-benar idle
-        setTimeout(async () => {
-            try {
-                pairingCode = await requestPairingWithRetry(pairingNumber);
-                console.log(`✅ KODE PAIRING ANDA: ${pairingCode}`);
-                console.log('-----------------------------');
-            } catch (err) {
-                console.error('❌ Gagal total generate pairing code setelah 3x percobaan.');
-                pairingCodeRequested = false; 
-            }
-        }, 10000); 
-    }
-
-    if (!pairingCode) {
-        console.log('--- QR CODE TERSEDIA (HANYA 1 KALI) ---');
-        console.log('SILAKAN SCAN SEGERA:');
-        console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
-        console.log('-----------------------------');
-    }
+    console.log('--- QR CODE TERSEDIA (HANYA 1 KALI) ---');
+    console.log('SILAKAN SCAN SEGERA:');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+    console.log('-----------------------------');
 });
 
 // Event ketika jatah QR habis (Anti-Loop)
@@ -106,34 +66,12 @@ app.get('/', (req, res) => {
         `);
     }
 
-    if (!latestQR && !pairingCode) {
+    if (!latestQR) {
         return res.send(`
             <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
                 <h1>Bot Sedang Loading...</h1>
                 <p>Status: Menyiapkan browser. Harap tunggu 10-20 detik lalu refresh halaman ini.</p>
                 <script>setTimeout(() => { location.reload(); }, 5000);</script>
-            </div>
-        `);
-    }
-
-    if (pairingCode) {
-        return res.send(`
-            <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
-                <h1 style="color:#25D366;">WhatsApp Bot Tracker - Pairing Code</h1>
-                <p>Masukkan kode di bawah ini di WhatsApp HP Anda</p>
-                <div style="background:white; display:inline-block; padding:30px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1); font-size:48px; font-weight:bold; letter-spacing:5px; color:#333; border: 2px solid #25D366;">
-                    ${pairingCode}
-                </div>
-                <br><br>
-                <div style="max-width:500px; margin:0 auto; text-align:left; background:#f9f9f9; padding:20px; border-radius:10px;">
-                    <b>Cara memasukkan kode:</b><br>
-                    1. Buka WhatsApp di HP<br>
-                    2. Klik <b>Perangkat Tertaut</b><br>
-                    3. Klik <b>Tautkan Perangkat</b><br>
-                    4. Klik <b>Tautkan dengan nomor telepon saja</b> di bagian bawah<br>
-                    5. Masukkan kode di atas.
-                </div>
-                <script>setTimeout(() => { location.reload(); }, 60000);</script>
             </div>
         `);
     }
@@ -178,32 +116,32 @@ client.on('disconnected', reason => {
 });
 
 client.on('message_create', async (message) => {
-    const rawText = message.body;
-    if (!rawText) return;
+    try {
+        const rawText = message.body;
+        if (!rawText) return;
 
-    const text = rawText.toLowerCase().trim();
-    
-    // Log untuk debug (akan muncul di Railway Logs)
-    console.log(`📩 Pesan masuk: "${text}" dari ${message.from}`);
+        const text = rawText.toLowerCase().trim();
+        
+        // Log untuk debug masuk
+        console.log(`📩 Pesan masuk: "${text}"`);
 
-    // Hashing user phone untuk privacy
-    const user = crypto.createHash('sha256').update(message.from).digest('hex');
+        // Hashing user phone untuk privacy
+        const user = crypto.createHash('sha256').update(message.from).digest('hex');
 
-    // Abaikan pesan dari grup
-    if (message.from.includes('@g.us')) return;
+        // Abaikan pesan dari grup
+        if (message.from.includes('@g.us')) return;
 
-    // Abaikan balasan bot itu sendiri (yang diawali simbol status) agar tidak loop
-    const statusSymbols = ['✅', '❌', '📅', '📊', '⏳', '🗑️', '📈', '🛍️', '💰'];
-    const isBotResponse = statusSymbols.some(symbol => rawText.startsWith(symbol));
+        // Abaikan balasan bot itu sendiri agar tidak loop
+        const statusSymbols = ['✅', '❌', '📅', '📊', '⏳', '🗑️', '📈', '🛍️', '💰'];
+        const isBotResponse = statusSymbols.some(symbol => rawText.startsWith(symbol));
 
-    if (message.fromMe && isBotResponse) {
-        return;
-    }
+        if (message.fromMe && isBotResponse) return;
 
-    // ===== PING TEST =====
-    if (text === 'test' || text === 'ping' || text === 'ready') {
-        return message.reply('✅ Bot Aktif dan Siap Digunakan!');
-    }
+        // ===== PING TEST =====
+        if (text === 'test' || text === 'ping' || text === 'ready') {
+            console.log('--- Membalas PING/TEST ---');
+            return message.reply('✅ Bot Aktif dan Siap Digunakan!');
+        }
 
     // ===== TAMBAH TASK (BESOK / TOMORROW) =====
     if (text.startsWith('besok ') || text.startsWith('tomorrow ')) {
@@ -274,13 +212,13 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: TODAY / HARI INI =====
-    if (text === 'today task' || text === 'hari ini task') {
+    if (text.includes('today') || text.includes('hari ini')) {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
             [today, user],
             (err, results) => {
-                if (err) return message.reply('❌ Error ambil data');
+                if (err) throw err;
                 if (results.length === 0) return message.reply('📭 Tidak ada task hari ini');
 
                 let response = `📋 *DAFTAR TASK HARI INI*\n`;
@@ -297,14 +235,18 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: BESOK / TOMORROW =====
-    if (text === 'besok task' || text === 'tomorrow task') {
-        const besok = dayjs().add(1, 'day').format('YYYY-MM-DD');
-        db.query(
-            'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
-            [besok, user],
-            (err, results) => {
-                if (err) return message.reply('❌ Error ambil data');
-                if (results.length === 0) return message.reply('📭 Tidak ada task untuk besok');
+    if (text.includes('besok') || text.includes('tomorrow')) {
+        // Abaikan jika ini perintah TAMBAH (yang diawali 'task ' atau diakhiri ' besok')
+        if (text.startsWith('task ') || text.split(' ').length > 2) {
+             // Biarkan diproses oleh handler TAMBAH di bawah
+        } else {
+            const besok = dayjs().add(1, 'day').format('YYYY-MM-DD');
+            db.query(
+                'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
+                [besok, user],
+                (err, results) => {
+                    if (err) throw err;
+                    if (results.length === 0) return message.reply('📭 Tidak ada task untuk besok');
 
                 let response = `📋 *DAFTAR TASK BESOK*\n`;
                 response += `📅 Tanggal: ${besok}\n`;
@@ -350,13 +292,13 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: ALL / SEMUA =====
-    if (text === 'all task' || text === 'semua task') {
+    if (text.includes('all') || text.includes('semua')) {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE user_phone = ? AND tanggal >= ? ORDER BY tanggal ASC, id ASC',
             [user, today],
             (err, results) => {
-                if (err) return message.reply('❌ Error ambil data');
+                if (err) throw err;
                 if (results.length === 0) return message.reply('📭 Anda belum memiliki task mendatang');
 
                 let response = `📊 *Daftar Semua Task*\n`;
@@ -685,7 +627,10 @@ client.on('message_create', async (message) => {
             if (result.affectedRows === 0) return message.reply('❌ ID pengeluaran tidak ditemukan');
             message.reply(`🗑️ Data pengeluaran ID:${id} telah dihapus`);
         });
-        return;
+        }
+    } catch (err) {
+        console.error('❌ CRITICAL ERROR in message_create:', err);
+        message.reply('⚠️ Maaf, terjadi kesalahan teknis saat memproses pesan Anda.');
     }
 });
 
