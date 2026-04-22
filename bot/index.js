@@ -479,7 +479,8 @@ client.on('message_create', async (message) => {
         `;
         db.query(query, [user, kategori, nominal, bulan], (err) => {
             if (err) return message.reply('❌ Gagal simpan budget');
-            message.reply(`✅ Budget *${kategori}* bulan ini diset ke ${formatRupiah(nominal)}`);
+            const daily = nominal / dayjs().daysInMonth();
+            message.reply(`✅ Budget *${kategori}* diset: ${formatRupiah(nominal)}\n📅 Estimasi jatah: *${formatRupiah(daily)}/hari*`);
         });
         return;
     }
@@ -505,22 +506,31 @@ client.on('message_create', async (message) => {
                 if (err) return message.reply('❌ Gagal simpan pengeluaran');
                 const lastId = result.insertId;
 
-                // Hitung sisa budget
+                // Hitung sisa budget (Bulanan & Harian)
                 const budgetQuery = `
                     SELECT 
                         (SELECT nominal FROM budgets WHERE user_phone = ? AND kategori = ? AND bulan = ?) as budget,
-                        (SELECT SUM(nominal) FROM expenses WHERE user_phone = ? AND kategori = ? AND tanggal LIKE ?) as terpakai
+                        (SELECT SUM(nominal) FROM expenses WHERE user_phone = ? AND kategori = ? AND tanggal LIKE ?) as terpakai_bulan,
+                        (SELECT SUM(nominal) FROM expenses WHERE user_phone = ? AND kategori = ? AND tanggal = ?) as terpakai_hari
                 `;
-                db.query(budgetQuery, [user, kategori, bulan, user, kategori, `${bulan}%`], (bErr, bRows) => {
+                db.query(budgetQuery, [user, kategori, bulan, user, kategori, `${bulan}%`, user, kategori, tanggal], (bErr, bRows) => {
                     let response = `✅ *Tercatat (ID:${lastId})*\n`;
                     response += `🛍️ Item: ${deskripsi}\n`;
                     response += `💰 Harga: ${formatRupiah(nominal)}\n`;
                     response += `━━━━━━━━━━━━━━\n`;
 
                     if (!bErr && bRows[0].budget) {
-                        const sisa = bRows[0].budget - bRows[0].terpakai;
-                        response += `📉 Sisa Budget *${kategori}*: ${formatRupiah(sisa)}`;
-                        if (sisa < 0) response += `\n⚠️ *OVER BUDGET!*`;
+                        const days = dayjs().daysInMonth();
+                        const dailyLimit = bRows[0].budget / days;
+                        const sisaBulan = bRows[0].budget - bRows[0].terpakai_bulan;
+                        const sisaHari = dailyLimit - bRows[0].terpakai_hari;
+
+                        response += `📉 Sisa Bulanan: ${formatRupiah(sisaBulan)}\n`;
+                        response += `📅 Sisa Hari Ini: *${formatRupiah(sisaHari)}*\n`;
+                        response += `(Jatah: ${formatRupiah(dailyLimit)}/hari)`;
+                        
+                        if (sisaHari < 0) response += `\n⚠️ *OVER BUDGET HARIAN!*`;
+                        if (sisaBulan < 0) response += `\n🚨 *TOTAL LIMIT JEBOL!*`;
                     }
                     message.reply(response);
                 });
@@ -553,11 +563,11 @@ client.on('message_create', async (message) => {
 
             rows.forEach(row => {
                 const sisa = row.budget - row.terpakai;
+                const daily = row.budget / dayjs().daysInMonth();
                 grandTotalSisa += sisa;
                 response += `*${row.kategori.toUpperCase()}*\n`;
-                response += `Budget: ${formatRupiah(row.budget)}\n`;
-                response += `Pakai : ${formatRupiah(row.terpakai)}\n`;
-                response += `Sisa  : *${formatRupiah(sisa)}*\n\n`;
+                response += `Sisa  : *${formatRupiah(sisa)}*\n`;
+                response += `Jatah : ${formatRupiah(daily)}/hari\n\n`;
             });
 
             response += `━━━━━━━━━━━━━━\n`;
