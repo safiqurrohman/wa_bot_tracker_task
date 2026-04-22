@@ -38,5 +38,27 @@
   Contoh: hapus 15
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 *MANAJEMEN KEUANGAN & ANGGARAN*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+--- 💵 SET ANGGARAN (BUDGET) ---
+• budget [kategori] [nominal]  -> Set budget bulanan per kategori
+  Contoh: budget makan 1000000
+
+--- 🛒 CATAT PENGELUARAN ---
+• beli [kategori] [nominal] [item] -> Catat belanja & lihat sisa budget
+  Contoh: beli makan 25000 nasi goreng
+  Contoh: beli bensin 15000
+  (Sisa budget kategori tsb akan otomatis dihitung)
+
+--- 📊 CEK SALDO & LAPORAN ---
+• budget / sisa uang           -> Lihat ringkasan sisa anggaran bulan ini
+• uang hari ini                -> Lihat daftar belanja hari ini & totalnya
+
+--- 🗑️ MANAJEMEN DATA ---
+• hapus uang [id]              -> Hapus catatan pengeluaran
+  Contoh: hapus uang 5
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💡 *Note*: Bot ini menggunakan sistem Hashing JID untuk keamanan privasi Anda.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

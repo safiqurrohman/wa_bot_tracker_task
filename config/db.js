@@ -14,8 +14,8 @@ db.connect((err) => {
     } else {
         console.log('✅ Database terhubung');
         
-        // Buat tabel jika belum ada (memudahkan setup di Railway)
-        const createTableQuery = `
+        // Buat tabel tasks
+        const createTasksQuery = `
             CREATE TABLE IF NOT EXISTS tasks (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_phone VARCHAR(100),
@@ -25,9 +25,42 @@ db.connect((err) => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `;
-        db.query(createTableQuery, (err) => {
-            if (err) console.error('❌ Gagal inisialisasi tabel:', err);
+        db.query(createTasksQuery, (err) => {
+            if (err) console.error('❌ Gagal inisialisasi tabel tasks:', err);
             else console.log('✅ Tabel "tasks" siap digunakan');
+        });
+
+        // 1. Buat tabel budgets (NEW)
+        const createBudgetsQuery = `
+            CREATE TABLE IF NOT EXISTS budgets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_phone VARCHAR(100),
+                kategori VARCHAR(50),
+                nominal DECIMAL(15, 2),
+                bulan VARCHAR(7),
+                UNIQUE KEY unique_budget (user_phone, kategori, bulan)
+            )
+        `;
+        db.query(createBudgetsQuery, (err) => {
+            if (err) console.error('❌ Gagal inisialisasi tabel budgets:', err);
+            else console.log('✅ Tabel "budgets" siap digunakan');
+        });
+
+        // 2. Buat tabel expenses (NEW)
+        const createExpensesQuery = `
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_phone VARCHAR(100),
+                kategori VARCHAR(50),
+                nominal DECIMAL(15, 2),
+                deskripsi TEXT,
+                tanggal DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        db.query(createExpensesQuery, (err) => {
+            if (err) console.error('❌ Gagal inisialisasi tabel expenses:', err);
+            else console.log('✅ Tabel "expenses" siap digunakan');
         });
     }
 });

@@ -7,6 +7,14 @@ const express = require('express');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 
+const formatRupiah = (number) => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(number);
+};
+
 const app = express();
 const port = process.env.PORT || 3000;
 let latestQR = '';
@@ -114,8 +122,8 @@ client.on('message_create', async (message) => {
 
 
     // ===== PING TEST =====
-    if (text === 'ping') {
-        return message.reply('pong');
+    if (text === 'test') {
+        return message.reply('Layanan Aktif');
     }
 
     // ===== TAMBAH TASK (BESOK / TOMORROW) =====
@@ -430,6 +438,144 @@ client.on('message_create', async (message) => {
                 message.reply(response);
             }
         );
+        return;
+    }
+
+    // ==========================================
+    // ===== SISTEM KEUANGAN (BUDGETING) =======
+    // ==========================================
+
+    // 1. SET BUDGET: budget [kategori] [nominal]
+    if (text.startsWith('budget ')) {
+        const parts = text.split(' ');
+        if (parts.length < 3) return message.reply('❌ Format salah. Contoh: budget makan 1000000');
+        
+        const kategori = parts[1];
+        const nominal = parseFloat(parts[2]);
+        const bulan = dayjs().format('YYYY-MM');
+
+        if (isNaN(nominal)) return message.reply('❌ Nominal harus angka');
+
+        const query = `
+            INSERT INTO budgets (user_phone, kategori, nominal, bulan) 
+            VALUES (?, ?, ?, ?) 
+            ON DUPLICATE KEY UPDATE nominal = VALUES(nominal)
+        `;
+        db.query(query, [user, kategori, nominal, bulan], (err) => {
+            if (err) return message.reply('❌ Gagal simpan budget');
+            message.reply(`✅ Budget *${kategori}* bulan ini diset ke ${formatRupiah(nominal)}`);
+        });
+        return;
+    }
+
+    // 2. CATAT BELANJA: beli [kategori] [nominal] [deskripsi]
+    if (text.startsWith('beli ')) {
+        const parts = rawText.split(' ');
+        if (parts.length < 3) return message.reply('❌ Format salah. Contoh: beli makan 20000 nasi padang');
+
+        const kategori = parts[1].toLowerCase();
+        const nominal = parseFloat(parts[2]);
+        const deskripsi = parts.slice(3).join(' ') || kategori;
+        const bulan = dayjs().format('YYYY-MM');
+        const tanggal = dayjs().format('YYYY-MM-DD');
+
+        if (isNaN(nominal)) return message.reply('❌ Nominal harus angka');
+
+        // Simpan pengeluaran
+        db.query(
+            'INSERT INTO expenses (user_phone, kategori, nominal, deskripsi, tanggal) VALUES (?, ?, ?, ?, ?)',
+            [user, kategori, nominal, deskripsi, tanggal],
+            (err, result) => {
+                if (err) return message.reply('❌ Gagal simpan pengeluaran');
+                const lastId = result.insertId;
+
+                // Hitung sisa budget
+                const budgetQuery = `
+                    SELECT 
+                        (SELECT nominal FROM budgets WHERE user_phone = ? AND kategori = ? AND bulan = ?) as budget,
+                        (SELECT SUM(nominal) FROM expenses WHERE user_phone = ? AND kategori = ? AND tanggal LIKE ?) as terpakai
+                `;
+                db.query(budgetQuery, [user, kategori, bulan, user, kategori, `${bulan}%`], (bErr, bRows) => {
+                    let response = `✅ *Tercatat (ID:${lastId})*\n`;
+                    response += `🛍️ Item: ${deskripsi}\n`;
+                    response += `💰 Harga: ${formatRupiah(nominal)}\n`;
+                    response += `━━━━━━━━━━━━━━\n`;
+
+                    if (!bErr && bRows[0].budget) {
+                        const sisa = bRows[0].budget - bRows[0].terpakai;
+                        response += `📉 Sisa Budget *${kategori}*: ${formatRupiah(sisa)}`;
+                        if (sisa < 0) response += `\n⚠️ *OVER BUDGET!*`;
+                    }
+                    message.reply(response);
+                });
+            }
+        );
+        return;
+    }
+
+    // 3. SISA UANG / BUDGET
+    if (text === 'sisa uang' || text === 'budget') {
+        const bulan = dayjs().format('YYYY-MM');
+        const query = `
+            SELECT b.kategori, b.nominal as budget, IFNULL(SUM(e.nominal), 0) as terpakai
+            FROM budgets b
+            LEFT JOIN expenses e ON b.kategori = e.kategori AND b.user_phone = e.user_phone AND e.tanggal LIKE ?
+            WHERE b.user_phone = ? AND b.bulan = ?
+            GROUP BY b.kategori
+        `;
+        db.query(query, [`${bulan}%`, user, bulan], (err, rows) => {
+            if (err) return message.reply('❌ Gagal ambil data budget');
+            if (rows.length === 0) return message.reply('📭 Anda belum mengatur budget bulan ini.');
+
+            let response = `📊 *Anggaran Bulan Ini (${bulan})*\n`;
+            response += `━━━━━━━━━━━━━━\n`;
+            let grandTotalSisa = 0;
+
+            rows.forEach(row => {
+                const sisa = row.budget - row.terpakai;
+                grandTotalSisa += sisa;
+                response += `*${row.kategori.toUpperCase()}*\n`;
+                response += `Budget: ${formatRupiah(row.budget)}\n`;
+                response += `Pakai : ${formatRupiah(row.terpakai)}\n`;
+                response += `Sisa  : *${formatRupiah(sisa)}*\n\n`;
+            });
+
+            response += `━━━━━━━━━━━━━━\n`;
+            response += `💰 *Total Sisa: ${formatRupiah(grandTotalSisa)}*`;
+            message.reply(response);
+        });
+        return;
+    }
+
+    // 4. PENGELUARAN HARI INI
+    if (text === 'uang hari ini') {
+        const tanggal = dayjs().format('YYYY-MM-DD');
+        db.query('SELECT * FROM expenses WHERE user_phone = ? AND tanggal = ?', [user, tanggal], (err, rows) => {
+            if (err) return message.reply('❌ Gagal ambil data harian');
+            if (rows.length === 0) return message.reply('📭 Belum ada pengeluaran hari ini.');
+
+            let total = 0;
+            let response = `💸 *Pengeluaran Hari Ini (${tanggal})*\n`;
+            response += `━━━━━━━━━━━━━━\n`;
+            rows.forEach(row => {
+                total += parseFloat(row.nominal);
+                response += `ID:${row.id} [${row.kategori}] ${row.diskripsi}: ${formatRupiah(row.nominal)}\n`;
+            });
+            response += `━━━━━━━━━━━━━━\n`;
+            response += `💰 *Total: ${formatRupiah(total)}*`;
+            message.reply(response);
+        });
+        return;
+    }
+
+    // 5. HAPUS PENGELUARAN
+    if (text.startsWith('hapus uang ')) {
+        const id = text.split(' ')[2];
+        db.query('DELETE FROM expenses WHERE id = ? AND user_phone = ?', [id, user], (err, result) => {
+            if (err) return message.reply('❌ Gagal hapus data');
+            if (result.affectedRows === 0) return message.reply('❌ ID pengeluaran tidak ditemukan');
+            message.reply(`🗑️ Data pengeluaran ID:${id} telah dihapus`);
+        });
         return;
     }
 });
