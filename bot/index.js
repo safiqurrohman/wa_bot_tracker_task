@@ -24,10 +24,10 @@ let pairingCode = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
-    qrMaxRetries: 1, // Batasi jatah QR agar tidak Loop
+    qrMaxRetries: 10, // Naikkan jatah agar tidak mati saat generate kode
     authTimeoutMs: 60000,
     puppeteer: {
-        headless: 'shell', // Gunakan mode shell agar frame lebih stabil
+        headless: 'shell', 
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -91,7 +91,7 @@ client.on('qr', async (qr) => {
 
 // Event ketika jatah QR habis (Anti-Loop)
 client.on('qr_max_combined_retries_reached', () => {
-    console.log('⚠️ Jatah QR habis. Bot berhenti agar tidak looping.');
+    console.log('⚠️ Sesi login berakhir. Silakan deploy ulang atau restart bot jika ingin mencoba lagi.');
     latestQR = 'EXPIRED';
 });
 
