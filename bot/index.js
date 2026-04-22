@@ -183,26 +183,26 @@ client.on('message_create', async (message) => {
 
     const text = rawText.toLowerCase().trim();
     
+    // Log untuk debug (akan muncul di Railway Logs)
+    console.log(`📩 Pesan masuk: "${text}" dari ${message.from}`);
+
     // Hashing user phone untuk privacy
     const user = crypto.createHash('sha256').update(message.from).digest('hex');
 
-    // Abaikan pesan yang dikirim oleh bot sendiri agar tidak looping
-    const isBotResponse = rawText.startsWith('✅') || 
-                         rawText.startsWith('❌') || 
-                         rawText.startsWith('📅') || 
-                         rawText.startsWith('📊') || 
-                         rawText.startsWith('⏳') || 
-                         rawText.startsWith('🗑️') ||
-                         rawText.startsWith('📈');
+    // Abaikan pesan dari grup
+    if (message.from.includes('@g.us')) return;
+
+    // Abaikan balasan bot itu sendiri (yang diawali simbol status) agar tidak loop
+    const statusSymbols = ['✅', '❌', '📅', '📊', '⏳', '🗑️', '📈', '🛍️', '💰'];
+    const isBotResponse = statusSymbols.some(symbol => rawText.startsWith(symbol));
 
     if (message.fromMe && isBotResponse) {
         return;
     }
 
-
     // ===== PING TEST =====
-    if (text === 'test') {
-        return message.reply('Layanan Aktif');
+    if (text === 'test' || text === 'ping' || text === 'ready') {
+        return message.reply('✅ Bot Aktif dan Siap Digunakan!');
     }
 
     // ===== TAMBAH TASK (BESOK / TOMORROW) =====
