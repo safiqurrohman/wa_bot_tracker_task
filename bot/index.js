@@ -27,7 +27,7 @@ const client = new Client({
     qrMaxRetries: 1, // Batasi jatah QR agar tidak Loop
     authTimeoutMs: 60000,
     puppeteer: {
-        headless: true,
+        headless: 'shell', // Gunakan mode shell agar frame lebih stabil
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -44,23 +44,39 @@ const client = new Client({
 
 let pairingCodeRequested = false;
 
+// Fungsi untuk meminta kode pairing dengan sistem Re-try (Anti Detached Frame)
+const requestPairingWithRetry = async (pairingNumber, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`--- MENCOBA GENERATE KODE PAIRING (${i + 1}/${retries}) ---`);
+            const code = await client.requestPairingCode(pairingNumber);
+            return code;
+        } catch (err) {
+            console.error(`❌ Percobaan ${i + 1} gagal:`, err.message);
+            if (i === retries - 1) throw err;
+            console.log('--- Menunggu 5 detik sebelum coba lagi... ---');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
+};
+
 client.on('qr', async (qr) => {
     latestQR = qr;
     const pairingNumber = process.env.PAIRING_NUMBER;
 
     if (pairingNumber && !pairingCodeRequested) {
         pairingCodeRequested = true;
-        console.log(`--- MENYIAPKAN PAIRING CODE UNTUK: ${pairingNumber} ---`);
+        console.log(`--- MENYIAPKAN PAIRING CODE (STABILIZATION MODE): ${pairingNumber} ---`);
         
-        // Delay 10 detik agar sistem internal WA Web benar-benar siap
+        // Jeda awal 10 detik agar browser benar-benar idle
         setTimeout(async () => {
             try {
-                pairingCode = await client.requestPairingCode(pairingNumber);
+                pairingCode = await requestPairingWithRetry(pairingNumber);
                 console.log(`✅ KODE PAIRING ANDA: ${pairingCode}`);
                 console.log('-----------------------------');
             } catch (err) {
-                console.error('❌ Gagal generate pairing code:', err.message);
-                pairingCodeRequested = false; // Reset agar bisa coba di QR selanjutnya jika perlu
+                console.error('❌ Gagal total generate pairing code setelah 3x percobaan.');
+                pairingCodeRequested = false; 
             }
         }, 10000); 
     }
