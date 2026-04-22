@@ -260,6 +260,7 @@ client.on('message_create', async (message) => {
         );
         return;
     }
+    }
 
     // ===== LIST: PREVIOUS (KEMARIN / AGO) =====
     const agoMatch = text.match(/(\d+)\s*(hari sebelumnya|days ago)/);
@@ -627,7 +628,8 @@ client.on('message_create', async (message) => {
             if (result.affectedRows === 0) return message.reply('❌ ID pengeluaran tidak ditemukan');
             message.reply(`🗑️ Data pengeluaran ID:${id} telah dihapus`);
         });
-        }
+        return;
+    }
     } catch (err) {
         console.error('❌ CRITICAL ERROR in message_create:', err);
         message.reply('⚠️ Maaf, terjadi kesalahan teknis saat memproses pesan Anda.');
