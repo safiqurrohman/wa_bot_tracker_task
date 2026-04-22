@@ -15,7 +15,7 @@ const client = new Client({
     authStrategy: new LocalAuth(),
     webVersionCache: {
         type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1014610951-alpha.html',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1015901307-alpha.html',
     },
     puppeteer: {
         headless: true,
@@ -23,7 +23,9 @@ const client = new Client({
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-extensions',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
             '--disable-gpu'
         ],
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
@@ -32,35 +34,40 @@ const client = new Client({
 
 client.on('qr', (qr) => {
     latestQR = qr;
-    console.log('--- QR CODE DETECTED ---');
-    // Generate URL for scanning if terminal is messy
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`;
-    console.log('Jika QR di atas rusak, buka link ini:');
-    console.log(qrUrl);
-    console.log('------------------------');
-    
-    // Tetap print ke terminal (opsional)
-    qrcode.generate(qr, { small: true });
+    console.log('--- QR CODE BARU TERSEDIA ---');
+    console.log('SILAKAN BUKA URL PUBLIK BOT ANDA UNTUK SCAN');
+    console.log('ATAU BUKA LINK INI:');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+    console.log('-----------------------------');
 });
 
 app.get('/', (req, res) => {
     if (!latestQR) {
-        return res.send('<h1>Bot sedang loading atau sudah login.</h1>');
+        return res.send(`
+            <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+                <h1>Bot Sedang Loading...</h1>
+                <p>Status: Menyiapkan browser. Harap tunggu 10-20 detik lalu refresh halaman ini.</p>
+                <script>setTimeout(() => { location.reload(); }, 5000);</script>
+            </div>
+        `);
     }
-    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(latestQR)}`;
+    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(latestQR)}`;
     res.send(`
         <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
-            <h1>Scan QR Code untuk Login Bot</h1>
-            <p>Silakan scan menggunakan WhatsApp di HP Anda (Linked Devices)</p>
-            <img src="${qrImg}" style="border: 10px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.2);" />
+            <h1 style="color:#25D366;">WhatsApp Bot Tracker - Login</h1>
+            <p>Silakan scan menggunakan WhatsApp di HP Anda (Perangkat Tautan)</p>
+            <div style="background:white; display:inline-block; padding:20px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+                <img src="${qrImg}" />
+            </div>
             <br><br>
-            <p>Status: Menunggu Scan...</p>
+            <p style="color:#666;">QR Code akan otomatis terupdate. Jangan tutup halaman ini sampai login berhasil.</p>
+            <script>setTimeout(() => { location.reload(); }, 40000);</script>
         </div>
     `);
 });
 
 app.listen(port, () => {
-    console.log(`Server QR aktif di port ${port}`);
+    console.log(`Web Server QR aktif di port ${port}`);
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
         console.log(`⚠️ Port ${port} sudah terpakai. Mencoba port lain...`);
