@@ -20,6 +20,7 @@ const formatRupiah = (number) => {
 const app = express();
 const port = process.env.PORT || 3000;
 let latestQR = '';
+let pairingCode = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -39,17 +40,32 @@ const client = new Client({
     }
 });
 
-client.on('qr', (qr) => {
+client.on('qr', async (qr) => {
     latestQR = qr;
-    console.log('--- QR CODE BARU TERSEDIA ---');
-    console.log('SILAKAN BUKA URL PUBLIK BOT ANDA UNTUK SCAN');
-    console.log('ATAU BUKA LINK INI:');
-    console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
-    console.log('-----------------------------');
+    const pairingNumber = process.env.PAIRING_NUMBER; // Contoh: 628123456789 (tanpa +)
+
+    if (pairingNumber && !pairingCode) {
+        try {
+            console.log(`--- MENGHASILKAN KODE PAIRING UNTUK: ${pairingNumber} ---`);
+            pairingCode = await client.requestPairingCode(pairingNumber);
+            console.log(`KODE PAIRING ANDA: ${pairingCode}`);
+            console.log('-----------------------------');
+        } catch (err) {
+            console.error('❌ Gagal generate pairing code:', err);
+        }
+    }
+
+    if (!pairingCode) {
+        console.log('--- QR CODE BARU TERSEDIA ---');
+        console.log('SILAKAN BUKA URL PUBLIK BOT ANDA UNTUK SCAN');
+        console.log('ATAU BUKA LINK INI:');
+        console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
+        console.log('-----------------------------');
+    }
 });
 
 app.get('/', (req, res) => {
-    if (!latestQR) {
+    if (!latestQR && !pairingCode) {
         return res.send(`
             <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
                 <h1>Bot Sedang Loading...</h1>
@@ -58,6 +74,29 @@ app.get('/', (req, res) => {
             </div>
         `);
     }
+
+    if (pairingCode) {
+        return res.send(`
+            <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+                <h1 style="color:#25D366;">WhatsApp Bot Tracker - Pairing Code</h1>
+                <p>Masukkan kode di bawah ini di WhatsApp HP Anda</p>
+                <div style="background:white; display:inline-block; padding:30px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1); font-size:48px; font-weight:bold; letter-spacing:5px; color:#333; border: 2px solid #25D366;">
+                    ${pairingCode}
+                </div>
+                <br><br>
+                <div style="max-width:500px; margin:0 auto; text-align:left; background:#f9f9f9; padding:20px; border-radius:10px;">
+                    <b>Cara memasukkan kode:</b><br>
+                    1. Buka WhatsApp di HP<br>
+                    2. Klik <b>Perangkat Tertaut</b><br>
+                    3. Klik <b>Tautkan Perangkat</b><br>
+                    4. Klik <b>Tautkan dengan nomor telepon saja</b> di bagian bawah<br>
+                    5. Masukkan kode di atas.
+                </div>
+                <script>setTimeout(() => { location.reload(); }, 60000);</script>
+            </div>
+        `);
+    }
+
     const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(latestQR)}`;
     res.send(`
         <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
