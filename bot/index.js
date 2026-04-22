@@ -24,6 +24,7 @@ let pairingCode = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
+    qrMaxRetries: 1, // Batasi jatah QR agar tidak Loop
     authTimeoutMs: 60000,
     puppeteer: {
         headless: true,
@@ -34,19 +35,24 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-features=IsolateOrigins,site-per-process' // Tambahan stabilitas
         ],
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
     }
 });
 
+let pairingCodeRequested = false;
+
 client.on('qr', async (qr) => {
     latestQR = qr;
     const pairingNumber = process.env.PAIRING_NUMBER;
 
-    if (pairingNumber && !pairingCode) {
-        // Menambahkan delay agar browser benar-benar siap sebelum minta kode
-        console.log(`--- MENUNGGU BROWSER SIAP UNTUK PAIRING: ${pairingNumber} ---`);
+    if (pairingNumber && !pairingCodeRequested) {
+        pairingCodeRequested = true;
+        console.log(`--- MENYIAPKAN PAIRING CODE UNTUK: ${pairingNumber} ---`);
+        
+        // Delay 10 detik agar sistem internal WA Web benar-benar siap
         setTimeout(async () => {
             try {
                 pairingCode = await client.requestPairingCode(pairingNumber);
@@ -54,21 +60,36 @@ client.on('qr', async (qr) => {
                 console.log('-----------------------------');
             } catch (err) {
                 console.error('❌ Gagal generate pairing code:', err.message);
-                // Jika gagal, biarkan saja agar user bisa pakai QR di web
+                pairingCodeRequested = false; // Reset agar bisa coba di QR selanjutnya jika perlu
             }
-        }, 5000); 
+        }, 10000); 
     }
 
     if (!pairingCode) {
-        console.log('--- QR CODE BARU TERSEDIA ---');
-        console.log('SILAKAN BUKA URL PUBLIK BOT ANDA UNTUK SCAN');
-        console.log('ATAU BUKA LINK INI:');
+        console.log('--- QR CODE TERSEDIA (HANYA 1 KALI) ---');
+        console.log('SILAKAN SCAN SEGERA:');
         console.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`);
         console.log('-----------------------------');
     }
 });
 
+// Event ketika jatah QR habis (Anti-Loop)
+client.on('qr_max_combined_retries_reached', () => {
+    console.log('⚠️ Jatah QR habis. Bot berhenti agar tidak looping.');
+    latestQR = 'EXPIRED';
+});
+
 app.get('/', (req, res) => {
+    if (latestQR === 'EXPIRED') {
+        return res.send(`
+            <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+                <h1 style="color:red;">Sesi QR Habis</h1>
+                <p>Bot berhenti meminta QR baru demi keamanan (Anti-Loop).</p>
+                <button onclick="location.reload()" style="padding:10px 20px; background:#25D366; color:white; border:none; border-radius:5px; cursor:pointer;">Coba Lagi</button>
+            </div>
+        `);
+    }
+
     if (!latestQR && !pairingCode) {
         return res.send(`
             <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
