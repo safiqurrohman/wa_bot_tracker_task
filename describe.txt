@@ -1,64 +1,67 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 *MANUAL BOT TASK TRACKER*
+📋 *MANUAL LENGKAP WHATSAPP TASK & FINANCE BOT*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
---- 📝 PENAMBAHAN TASK ---
+--- 🛠️ SISTEM & STATUS ---
+• test                         -> Cek apakah bot sedang aktif
+  (Bot akan membalas: "Layanan Aktif")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 *MANAJEMEN TUGAS (TASK TRACKER)*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+--- ➕ PENAMBAHAN TASK ---
 • task [deskripsi]             -> Tambah task untuk hari ini
   Contoh: task belajar math
 • task besok [deskripsi]       -> Tambah task untuk besok
   Contoh: task besok rapat kerja
-• task [YYYY-MM-DD] [item]     -> Tambah task tanggal spesifik
+• task [YYYY-MM-DD] [deskripsi] -> Tambah task tanggal spesifik
   Contoh: task 2026-05-01 beli tiket
 • besok [deskripsi]            -> Shorthand tambah task besok
   Contoh: besok olahraga pagi
 
---- 🔍 MELIHAT DAFTAR TASK ---
+--- 🔍 CEK DAFTAR TASK ---
 • today / hari ini             -> Lihat task hari ini
 • besok / tomorrow             -> Lihat task besok
 • kemarin / yesterday          -> Lihat task kemarin
 • [n] hari sebelumnya          -> Lihat task [n] hari lalu
   Contoh: 2 hari sebelumnya
-• all / semua                  -> Lihat semua task (mendatang)
+• all / semua                  -> Lihat semua task mendatang
 • belum selesai / pending      -> Lihat semua task yg belum dikerjakan
 • [YYYY-MM-DD]                 -> Lihat task di tanggal spesifik
-  Contoh: 2026-04-25
 
---- 📈 LAPORAN (REPORT) ---
-• report / laporan             -> Ringkasan semua waktu + detail task
-• report 1w / 1 minggu         -> Ringkasan 7 hari terakhir
-• report 2w / 2 minggu         -> Ringkasan 14 hari terakhir
-• report 1m / 1 bulan          -> Ringkasan 30 hari terakhir
-• report [YYYY-MM-DD]          -> Ringkasan 1 minggu mulai tgl tsb
-  Contoh: report 2026-04-01
+--- 📈 LAPORAN PROGRES ---
+• report / laporan             -> Statistik & detail task (Semua waktu)
+• report 1w / 1 minggu         -> Statistik 7 hari terakhir
+• report 1m / 1 bulan          -> Statistik 30 hari terakhir
 
---- ✅ MANAJEMEN TASK ---
-• done [id] / selesai [id]     -> Tandai task selesai (Gunakan Code ID)
-  Contoh: done 12
+--- ✅ KONTROL TASK ---
+• done [id] / selesai [id]     -> Tandai task selesai
 • hapus [id] / delete [id]     -> Hapus task permanen
-  Contoh: hapus 15
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💰 *MANAJEMEN KEUANGAN & ANGGARAN*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 --- 💵 SET ANGGARAN (BUDGET) ---
-• budget [kategori] [nominal]  -> Set budget bulanan per kategori
+• budget [kategori] [nominal]  -> Set target belanja per kategori
   Contoh: budget makan 1000000
+  (Setting ini berlaku untuk bulan berjalan)
 
 --- 🛒 CATAT PENGELUARAN ---
-• beli [kategori] [nominal] [item] -> Catat belanja & lihat sisa budget
+• beli [kategori] [nominal] [item] -> Catat belanja & sisa budget
   Contoh: beli makan 25000 nasi goreng
   Contoh: beli bensin 15000
-  (Sisa budget kategori tsb akan otomatis dihitung)
+  (Bot otomatis menghitung sisa anggaran kategori tsb)
 
 --- 📊 CEK SALDO & LAPORAN ---
-• budget / sisa uang           -> Lihat ringkasan sisa anggaran bulan ini
+• budget / sisa uang           -> Lihat rekap anggaran & sisa saldo
 • uang hari ini                -> Lihat daftar belanja hari ini & totalnya
 
 --- 🗑️ MANAJEMEN DATA ---
-• hapus uang [id]              -> Hapus catatan pengeluaran
+• hapus uang [id]              -> Hapus catatan pengeluaran salah
   Contoh: hapus uang 5
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 *Note*: Bot ini menggunakan sistem Hashing JID untuk keamanan privasi Anda.
+💡 *Note*: Seluruh data Anda dienkripsi menggunakan sistem Hashing JID untuk menjamin keamanan privasi nomor telepon.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

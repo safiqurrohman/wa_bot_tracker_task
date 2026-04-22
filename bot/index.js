@@ -21,10 +21,7 @@ let latestQR = '';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
-    webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1015901307-alpha.html',
-    },
+    authTimeoutMs: 60000,
     puppeteer: {
         headless: true,
         args: [
