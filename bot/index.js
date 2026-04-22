@@ -96,14 +96,10 @@ client.on('message_create', async (message) => {
 
     const text = rawText.toLowerCase().trim();
     
-    // DEBUG: Cek pesan masuk di console
-    console.log(`[DEBUG] Pesan masuk dari ${message.from}: "${rawText}" (fromMe: ${message.fromMe})`);
-
     // Hashing user phone untuk privacy
     const user = crypto.createHash('sha256').update(message.from).digest('hex');
 
     // Abaikan pesan yang dikirim oleh bot sendiri agar tidak looping
-    // Tapi izinkan jika itu perintah (tidak diawali emoji balasan)
     const isBotResponse = rawText.startsWith('✅') || 
                          rawText.startsWith('❌') || 
                          rawText.startsWith('📅') || 
@@ -116,8 +112,6 @@ client.on('message_create', async (message) => {
         return;
     }
 
-    // Logging untuk debug (tetap menggunakan JID asli di console agar admin tahu pengirimnya)
-    console.log(`[${dayjs().format('HH:mm:ss')}] Pesan dari ${message.from}: ${rawText}`);
 
     // ===== PING TEST =====
     if (text === 'ping') {
