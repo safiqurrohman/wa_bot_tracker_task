@@ -194,7 +194,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: TODAY / HARI INI =====
-    if (text === 'task today' || text === 'task hari ini') {
+    if (text === 'today task' || text === 'hari ini task') {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
@@ -217,7 +217,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: BESOK / TOMORROW =====
-    if (text === 'task besok' || text === 'task tomorrow') {
+    if (text === 'besok task' || text === 'tomorrow task') {
         const besok = dayjs().add(1, 'day').format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE tanggal = ? AND user_phone = ? ORDER BY id ASC',
@@ -241,7 +241,7 @@ client.on('message_create', async (message) => {
 
     // ===== LIST: PREVIOUS (KEMARIN / AGO) =====
     const agoMatch = text.match(/(\d+)\s*(hari sebelumnya|days ago)/);
-    if (agoMatch || text === ' task kemarin' || text === ' task yesterday') {
+    if (agoMatch || text === 'kemarin task' || text === 'yesterday task') {
         let daysAgo = 1;
         if (agoMatch) {
             daysAgo = parseInt(agoMatch[1]);
@@ -270,7 +270,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: ALL / SEMUA =====
-    if (text === 'task all' || text === 'task semua') {
+    if (text === 'all task' || text === 'semua task') {
         const today = dayjs().format('YYYY-MM-DD');
         db.query(
             'SELECT * FROM tasks WHERE user_phone = ? AND tanggal >= ? ORDER BY tanggal ASC, id ASC',
@@ -299,7 +299,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== LIST: BELUM SELESAI =====
-    if (text === 'task belum selesai' || text === 'task pending') {
+    if (text === 'belum selesai task' || text === 'pending task') {
         db.query(
             'SELECT * FROM tasks WHERE user_phone = ? AND status = 0 ORDER BY tanggal ASC',
             [user],
@@ -320,7 +320,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== REPORT COMMANDS =====
-    if (text.startsWith('task report') || text.startsWith('task laporan')) {
+    if (text.startsWith('report task') || text.startsWith('laporan task')) {
         let startDate, endDate, title;
         const parts = text.split(' ');
 
@@ -409,7 +409,7 @@ client.on('message_create', async (message) => {
     }
 
     // ===== DONE TASK (BY ID) =====
-    if (text.startsWith('task done ') || text.startsWith('task selesai ')) {
+    if (text.startsWith('done task') || text.startsWith('selesai task')) {
         const idStr = text.split(' ')[1];
         const id = parseInt(idStr);
         if (!id) return message.reply('❌ Format salah. Contoh: done 12');
@@ -545,12 +545,11 @@ client.on('message_create', async (message) => {
         const query = `
             SELECT b.kategori, b.nominal as budget, IFNULL(SUM(e.nominal), 0) as terpakai
             FROM budgets b
-            LEFT JOIN expenses e ON b.kategori = e.kategori AND b.user_phone = e.user_phone AND e.tanggal >= ? AND e.tanggal <= LAST_DAY(?)
+            LEFT JOIN expenses e ON b.kategori = e.kategori AND b.user_phone = e.user_phone AND e.tanggal LIKE ?
             WHERE b.user_phone = ? AND b.bulan = ?
-            GROUP BY b.kategori
+            GROUP BY b.kategori, b.nominal
         `;
-        const startOfMonth = `${bulan}-01`;
-        db.query(query, [startOfMonth, startOfMonth, user, bulan], (err, rows) => {
+        db.query(query, [`${bulan}%`, user, bulan], (err, rows) => {
             if (err) {
                 console.error('Budget Query Error:', err);
                 return message.reply('❌ Gagal ambil data budget');
