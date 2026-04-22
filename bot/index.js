@@ -42,17 +42,21 @@ const client = new Client({
 
 client.on('qr', async (qr) => {
     latestQR = qr;
-    const pairingNumber = process.env.PAIRING_NUMBER; // Contoh: 628123456789 (tanpa +)
+    const pairingNumber = process.env.PAIRING_NUMBER;
 
     if (pairingNumber && !pairingCode) {
-        try {
-            console.log(`--- MENGHASILKAN KODE PAIRING UNTUK: ${pairingNumber} ---`);
-            pairingCode = await client.requestPairingCode(pairingNumber);
-            console.log(`KODE PAIRING ANDA: ${pairingCode}`);
-            console.log('-----------------------------');
-        } catch (err) {
-            console.error('❌ Gagal generate pairing code:', err);
-        }
+        // Menambahkan delay agar browser benar-benar siap sebelum minta kode
+        console.log(`--- MENUNGGU BROWSER SIAP UNTUK PAIRING: ${pairingNumber} ---`);
+        setTimeout(async () => {
+            try {
+                pairingCode = await client.requestPairingCode(pairingNumber);
+                console.log(`✅ KODE PAIRING ANDA: ${pairingCode}`);
+                console.log('-----------------------------');
+            } catch (err) {
+                console.error('❌ Gagal generate pairing code:', err.message);
+                // Jika gagal, biarkan saja agar user bisa pakai QR di web
+            }
+        }, 5000); 
     }
 
     if (!pairingCode) {
