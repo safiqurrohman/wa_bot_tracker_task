@@ -1,67 +1,67 @@
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 *MANUAL LENGKAP WHATSAPP TASK & FINANCE BOT*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   📊 WA TRACKER - PANDUAN MENU   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
---- 🛠️ SISTEM & STATUS ---
-• test                         -> Cek apakah bot sedang aktif
-  (Bot akan membalas: "Layanan Aktif")
+Halo! Saya adalah Bot Tracker Anda. Sekarang perintah saya lebih FLEKSIBEL (bisa dibalik-balik).
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 *MANAJEMEN TUGAS (TASK TRACKER)*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 *MANAJEMEN TASK (TUGAS)*
+━━━━━━━━━━━━━━
+• Tambah Task:
+  └ `task [deskripsi]` 
+    (Contoh: task belajar koding)
+  └ `besok [deskripsi]` 
+    (Contoh: besok ke pasar)
+  └ `task 2026-05-01 [deskripsi]`
+    (Contoh: task 2026-05-01 gajian)
 
---- ➕ PENAMBAHAN TASK ---
-• task [deskripsi]             -> Tambah task untuk hari ini
-  Contoh: task belajar math
-• task besok [deskripsi]       -> Tambah task untuk besok
-  Contoh: task besok rapat kerja
-• task [YYYY-MM-DD] [deskripsi] -> Tambah task tanggal spesifik
-  Contoh: task 2026-05-01 beli tiket
-• besok [deskripsi]            -> Shorthand tambah task besok
-  Contoh: besok olahraga pagi
+• Lihat Daftar:
+  └ `today` atau `hari ini`
+  └ `besok` atau `tomorrow`
+  └ `yesterday` atau `kemarin`
+  └ `all` atau `semua` (Task mendatang)
+  └ `pending` atau `belum selesai`
 
---- 🔍 CEK DAFTAR TASK ---
-• today / hari ini             -> Lihat task hari ini
-• besok / tomorrow             -> Lihat task besok
-• kemarin / yesterday          -> Lihat task kemarin
-• [n] hari sebelumnya          -> Lihat task [n] hari lalu
-  Contoh: 2 hari sebelumnya
-• all / semua                  -> Lihat semua task mendatang
-• belum selesai / pending      -> Lihat semua task yg belum dikerjakan
-• [YYYY-MM-DD]                 -> Lihat task di tanggal spesifik
+• Update Status/Hapus:
+  └ `selesai [id]` atau `done [id]`
+  └ `hapus [id]` atau `delete [id]`
 
---- 📈 LAPORAN PROGRES ---
-• report / laporan             -> Statistik & detail task (Semua waktu)
-• report 1w / 1 minggu         -> Statistik 7 hari terakhir
-• report 1m / 1 bulan          -> Statistik 30 hari terakhir
+• Laporan Progress:
+  └ `report` atau `laporan` (Semua waktu)
+  └ `report 1w` (1 minggu terakhir)
+  └ `report 1m` (1 bulan terakhir)
 
---- ✅ KONTROL TASK ---
-• done [id] / selesai [id]     -> Tandai task selesai
-• hapus [id] / delete [id]     -> Hapus task permanen
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 *MANAJEMEN KEUANGAN & ANGGARAN*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 *SISTEM KEUANGAN (FINANCE)*
+━━━━━━━━━━━━━━
+• Atur Budget Bulanan:
+  └ `budget [kategori] [nominal]`
+    (Contoh: budget makan 1500000)
 
---- 💵 SET ANGGARAN (BUDGET) ---
-• budget [kategori] [nominal]  -> Set target belanja per kategori
-  Contoh: budget makan 1000000
-  (Setting ini berlaku untuk bulan berjalan)
+• Catat Pengeluaran:
+  └ `beli [kategori] [nominal] [detail]`
+    (Contoh: beli makan 25000 nasi goreng)
 
---- 🛒 CATAT PENGELUARAN ---
-• beli [kategori] [nominal] [item] -> Catat belanja & sisa budget
-  Contoh: beli makan 25000 nasi goreng
-  Contoh: beli bensin 15000
-  (Bot otomatis menghitung sisa anggaran kategori tsb)
+• Pantau Sisa Uang & Jatah:
+  └ `budget` atau `sisa uang`
+    (Mengecek sisa budget per kategori & jatah harian)
+  └ `uang hari ini` 
+    (List barang yang dibeli hari ini)
+  └ `hapus uang [id]`
+    (Menghapus catatan pengeluaran salah)
 
---- 📊 CEK SALDO & LAPORAN ---
-• budget / sisa uang           -> Lihat rekap anggaran & sisa saldo
-• uang hari ini                -> Lihat daftar belanja hari ini & totalnya
 
---- 🗑️ MANAJEMEN DATA ---
-• hapus uang [id]              -> Hapus catatan pengeluaran salah
-  Contoh: hapus uang 5
+🛠️ *SISTEM & STATUS*
+━━━━━━━━━━━━━━
+• `test` / `ready` / `ping`
+  (Mengecek apakah bot sedang aktif)
+• `help` / `menu` / `fitur`
+  (Melihat panduan ini)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 *Note*: Seluruh data Anda dienkripsi menggunakan sistem Hashing JID untuk menjamin keamanan privasi nomor telepon.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 *TIPS:*
+Semua nominal uang dimasukkan tanpa titik/koma.
+Contoh: `budget makan 1000000` (Benar) ✅
+Contoh: `budget makan 1.000.000` (Salah) ❌
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bot ini menjaga privasi Anda. Data nomor HP Anda dienkripsi sebelum disimpan di database kami.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

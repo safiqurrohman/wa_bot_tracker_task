@@ -342,8 +342,8 @@ client.on('message_create', async (message) => {
         return;
     }
 
-    // ===== REPORT COMMANDS =====
-    if (text.startsWith('report task') || text.startsWith('laporan task')) {
+    // ===== REPORT COMMANDS (LAPORAN) =====
+    if (text.startsWith('report') || text.startsWith('laporan')) {
         let startDate, endDate, title;
         const parts = text.split(' ');
 
