@@ -167,14 +167,27 @@ client.on('message_create', async (message) => {
     // ===== FITUR / MENU (HELP) =====
     const helpKeywords = ['bisa apa', 'fitur', 'menu', 'help', 'panduan', 'tutor'];
     if (helpKeywords.some(keyword => text.includes(keyword))) {
-        try {
-            const manualPath = path.join(__dirname, '../describe.txt');
-            const manual = fs.readFileSync(manualPath, 'utf8');
-            return message.reply(manual);
-        } catch (err) {
-            console.error('Gagal baca manual:', err);
-            return message.reply('❌ Maaf, panduan sedang tidak tersedia.');
-        }
+        let menuMsg = `✨ *WATSAPP TRACKER PREMIUM* ✨\n`;
+        menuMsg += `━━━━━━━━━━━━━━━━━━\n\n`;
+        menuMsg += `📂 *MANAJEMEN TASK*\n`;
+        menuMsg += `├ \`task [isi]\` (Tambah hari ini)\n`;
+        menuMsg += `├ \`besok [isi]\` (Tambah besok)\n`;
+        menuMsg += `├ \`today\`/\`besok\`/\`kemarin\` (List)\n`;
+        menuMsg += `├ \`pending\` / \`all\` (Semua)\n`;
+        menuMsg += `└ \`done [id]\` / \`hapus [id]\` (Update)\n\n`;
+        menuMsg += `💰 *FINANCIAL TRACKER*\n`;
+        menuMsg += `├ \`budget [kat] [nom]\` (Set)\n`;
+        menuMsg += `├ \`beli [kat] [nom] [ket]\` (Input)\n`;
+        menuMsg += `├ \`sisa uang\` (Cek Sisa & Jatah)\n`;
+        menuMsg += `├ \`uang hari ini\` (History)\n`;
+        menuMsg += `└ \`hapus uang [id]\` (Batal)\n\n`;
+        menuMsg += `📈 *REPORT & STATUS*\n`;
+        menuMsg += `├ \`report\` / \`report 1w\` / \`1m\` \n`;
+        menuMsg += `└ \`ready\` / \`test\` (Cek Aktif)\n\n`;
+        menuMsg += `━━━━━━━━━━━━━━━━━━\n`;
+        menuMsg += `💡 _Ketik perintah tanpa tanda kurung_`;
+        
+        return message.reply(menuMsg);
     }
 
     // ===== TAMBAH TASK (GENERAL) =====
@@ -432,8 +445,12 @@ client.on('message_create', async (message) => {
     }
 
     // ===== DONE TASK (BY ID) =====
-    if (text.startsWith('done task') || text.startsWith('selesai task')) {
-        const idStr = text.split(' ')[1];
+    if (text.startsWith('done') || text.startsWith('selesai')) {
+        // Abaikan jika ini perintah 'selesai task' (masih didukung)
+        const parts = text.split(' ');
+        let idStr = parts[1];
+        if (idStr === 'task') idStr = parts[2];
+        
         const id = parseInt(idStr);
         if (!id) return message.reply('❌ Format salah. Contoh: done 12');
 
