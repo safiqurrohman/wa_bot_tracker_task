@@ -132,7 +132,7 @@ client.on('message_create', async (message) => {
         if (message.from.includes('@g.us')) return;
 
         // Abaikan balasan bot itu sendiri agar tidak loop
-        const statusSymbols = ['✅', '❌', '📅', '📊', '⏳', '🗑️', '📈', '🛍️', '💰'];
+        const statusSymbols = ['✅', '❌', '📅', '📊', '⏳', '🗑️', '📈', '🛍️', '💰', '📭', '🎉', '⚠️', '📋', '💸', '📌'];
         const isBotResponse = statusSymbols.some(symbol => rawText.startsWith(symbol));
 
         if (message.fromMe && isBotResponse) return;
